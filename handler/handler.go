@@ -91,8 +91,58 @@ func CreateOpening(ctx *gin.Context) {
 }
 
 func UpdateOpening(ctx *gin.Context) {
+	requestBody := struct {
+		ID       string `json:"id"`
+		Role     string `json:"role"`
+		Company  string `json:"company"`
+		Location string `json:"location"`
+		Salary   int32  `json:"salary"`
+		Link     string `json:"link"`
+		Remote   *bool  `json:"remote"`
+	}{}
+
+	if err := ctx.BindJSON(&requestBody); err != nil {
+		sendError(ctx, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if requestBody.ID == "" {
+		sendError(ctx, "Missing required id param!", http.StatusBadRequest)
+		return
+	}
+
+	opening := schemas.Opening{}
+	if err := db.First(&opening, requestBody.ID).Error; err != nil {
+		sendError(ctx, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	if requestBody.Role != opening.Role {
+		opening.Role = requestBody.Role
+	}
+	if requestBody.Company != opening.Company {
+		opening.Company = requestBody.Company
+	}
+	if requestBody.Location != opening.Location {
+		opening.Location = requestBody.Location
+	}
+	if requestBody.Salary != int32(opening.Salary) {
+		opening.Salary = float32(requestBody.Salary)
+	}
+	if requestBody.Link != opening.Link {
+		opening.Link = requestBody.Link
+	}
+	if *requestBody.Remote != opening.Remote {
+		opening.Remote = *requestBody.Remote
+	}
+
+	if err := db.Save(&opening).Error; err != nil {
+		sendError(ctx, "Error at updating opening: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get opening",
+		"message": "Opening updated with success!",
 	})
 }
 
