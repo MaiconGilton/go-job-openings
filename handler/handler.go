@@ -85,8 +85,25 @@ func UpdateOpening(ctx *gin.Context) {
 }
 
 func DeleteOpening(ctx *gin.Context) {
+	id := ctx.Query("id")
+	if id == "" {
+		sendError(ctx, "Missing required id param!", http.StatusBadRequest)
+		return
+	}
+
+	var opening = schemas.Opening{}
+	if err := db.First(&opening, id).Error; err != nil {
+		sendError(ctx, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	if err := db.Delete(&opening, id).Error; err != nil {
+		sendError(ctx, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get opening",
+		"message": "Opening deleted with success!",
 	})
 }
 
