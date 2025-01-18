@@ -120,7 +120,13 @@ func DeleteOpening(ctx *gin.Context) {
 }
 
 func ListOpenings(ctx *gin.Context) {
+	var openings = []schemas.Opening{}
+	if err := db.First(&openings).Error; err != nil {
+		sendError(ctx, err.Error(), http.StatusNotFound)
+		return
+	}
+
 	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Get opening",
+		"data": openings,
 	})
 }
